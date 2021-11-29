@@ -3,6 +3,13 @@
 
 #include <stdio.h> /* For printf() */
 
+/* override the default debug log in the tensorflow lite micro library: may not work on all MCU */
+void DebugLog(const char* s) {
+  if(s) {
+    printf("%s", s);
+  }
+}
+
 /*---------------------------------------------------------------------------*/
 PROCESS(node_process, "Node process");
 AUTOSTART_PROCESSES(&node_process);
