@@ -46,8 +46,9 @@
 #include "temp-arch.h"
 
 #include "lib/sensors.h"
+#include "icm20948.h"
 /*---------------------------------------------------------------------------*/
-SENSORS(&temperature_sensor);
+SENSORS(&temperature_sensor, &icm20948_sensor);
 /*---------------------------------------------------------------------------*/
 /** 
  * @} 

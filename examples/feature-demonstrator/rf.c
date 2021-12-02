@@ -3,6 +3,8 @@
  * trained on the HAR dataset.
  */
 
+#include "rf.h"
+
 int predict_0(const float features[])
 {
     int classification = -1;

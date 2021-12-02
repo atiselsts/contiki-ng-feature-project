@@ -73,6 +73,12 @@
 #define NRF_UARTE0_RX_PIN   22
 #define NRF_UARTE0_RX_PORT  0
 /*---------------------------------------------------------------------------*/
+#define ICM_SPI_PORT 1
+#define ICM_CS_PIN 8
+#define ICM_SCLK_PIN 6
+#define ICM_MOSI_PIN 4
+#define ICM_MISO_PIN 14
+/*---------------------------------------------------------------------------*/
 #endif /* NRF53_PDK_CONF_H */
 /*---------------------------------------------------------------------------*/
 /** 

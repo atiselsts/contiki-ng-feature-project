@@ -41,16 +41,22 @@
 #include "net/mac/tsch/tsch.h"
 #include "lib/random.h"
 #include "sys/node-id.h"
+#include "arch/platform/nrf/nrf5340/dk/icm20948.h"
+
+#include "features.h"
+#include "rf.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "App"
 #define LOG_LEVEL LOG_LEVEL_INFO
 
 #define UDP_PORT	8765
-#define SEND_INTERVAL		  (1 * CLOCK_SECOND)
+#define SAMPLE_INTERVAL		  (1)
 
 PROCESS(node_process, "Node");
 AUTOSTART_PROCESSES(&node_process);
+
+time_window_t sensor_data;
 
 /*
  * Note! This is not an example how to design a *good* schedule for TSCH,
@@ -99,32 +105,36 @@ rx_packet(struct simple_udp_connection *c,
 }
 
 
-static bool
-sample_sensor(uint8_t accel_data[3])
+static void
+sample_sensor(void)
 {
-  accel_data[0] = 1;
-  accel_data[1] = 2;
-  accel_data[2] = 3;
-  return true;
-}
-
-
-static enum activity_code
-infer_activity(uint8_t accel_data[3])
-{
-  return ACTIVITY_WALKING;
+  int pos = sensor_data.length;
+  if(pos < TIME_WINDOW_SIZE) {
+    sensor_data.x[pos] = icm20948_sensor.value(ICM20948_ACCEL_X);
+    sensor_data.y[pos] = icm20948_sensor.value(ICM20948_ACCEL_Y);
+    sensor_data.z[pos] = icm20948_sensor.value(ICM20948_ACCEL_Z);
+    sensor_data.length++;
+  }
 }
 
 
 static bool
 get_activity(struct application_data *appdata)
 {
-  uint8_t accel_data[3];
-  if (!sample_sensor(accel_data)) {
+  if(sensor_data.length < TIME_WINDOW_SIZE) {
+    /* no all data collected yet */
     return false;
   }
 
-  appdata->activity = infer_activity(accel_data);
+  /* get the features */
+  float features[RF_NUM_FEATURES];
+  compute_features(&sensor_data, features);
+
+  /* run the classifier and get the prediction */
+  appdata->activity = rf_classify_single(features);
+
+  /* reset the buffer */
+  sensor_data.length = 0;
   return true;
 }
 
@@ -139,10 +149,12 @@ PROCESS_THREAD(node_process, ev, data)
 
   PROCESS_BEGIN();
 
+  SENSORS_ACTIVATE(icm20948_sensor);
+
   /* Initialization; `rx_packet` is the function for packet reception */
   simple_udp_register(&udp_conn, UDP_PORT, NULL, UDP_PORT, rx_packet);
-  etimer_set(&periodic_timer, random_rand() % SEND_INTERVAL);
-
+  etimer_set(&periodic_timer, SAMPLE_INTERVAL);
+      
   if(node_id == 1) {  /* Running on the root? */
     NETSTACK_ROUTING.root_start();
   } else {
@@ -151,19 +163,24 @@ PROCESS_THREAD(node_process, ev, data)
     while(1) {
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
 
-      if(get_activity(&appdata)) {
-        if(NETSTACK_ROUTING.node_is_reachable()
-            && NETSTACK_ROUTING.get_root_ipaddr(&dst)) {
-          /* Send network uptime timestamp to the network root node */
-          seqnum++;
-          appdata.timestamp = (uint32_t)tsch_get_network_uptime_ticks();
-          LOG_INFO("Send to ");
-          LOG_INFO_6ADDR(&dst);
-          LOG_INFO_(", timestamp %" PRIu32 " activity %" PRIu16 "\n", appdata.timestamp, appdata.activity);
-          simple_udp_sendto(&udp_conn, &seqnum, sizeof(seqnum), &dst);
+      /* check if there is a new accel sample */
+      if(icm20948_sensor.status(SENSORS_READY)) {
+        /* read the sample */
+        sample_sensor();
+        if(get_activity(&appdata)) {
+          if(NETSTACK_ROUTING.node_is_reachable()
+              && NETSTACK_ROUTING.get_root_ipaddr(&dst)) {
+            /* Send network uptime timestamp to the network root node */
+            seqnum++;
+            appdata.timestamp = (uint32_t)tsch_get_network_uptime_ticks();
+            LOG_INFO("Send to ");
+            LOG_INFO_6ADDR(&dst);
+            LOG_INFO_(", timestamp %" PRIu32 " activity %" PRIu16 "\n", appdata.timestamp, appdata.activity);
+            simple_udp_sendto(&udp_conn, &seqnum, sizeof(seqnum), &dst);
+          }
         }
       }
-      etimer_set(&periodic_timer, SEND_INTERVAL);
+      etimer_reset(&periodic_timer);
     }
   }
 
