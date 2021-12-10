@@ -14,6 +14,16 @@
    5 LAYING
 */
 
+/* The recognized activities */
+enum activity_code {
+  ACTIVITY_WALKING,
+  ACTIVITY_WALKING_UPSTAIRS,
+  ACTIVITY_WALKING_DOWNSTAIRS,
+  ACTIVITY_SITTING,
+  ACTIVITY_STANDING,
+  ACTIVITY_LAYING,
+};
+
 /*
 Features used in the classifier (selected for the best accuracy / energy tradeoff):
 

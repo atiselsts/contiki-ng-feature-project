@@ -1,7 +1,7 @@
 BOARD_SOURCEFILES += board-leds.c
 BOARD_SOURCEFILES += board-buttons.c
 BOARD_SOURCEFILES += board-sensors.c
-BOARD_SOURCEFILES += icm20948.c
+BOARD_SOURCEFILES += icm20948_sensor.c icm20948.c
 
 CFLAGS += -DBOARD_CONF_PATH=\"nrf5340-dk-conf.h\"
 

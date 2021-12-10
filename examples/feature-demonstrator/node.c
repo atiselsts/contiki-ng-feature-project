@@ -67,16 +67,6 @@ time_window_t sensor_data;
  * their own schedules for TSCH that are different from Orchestra and 6TiSCH minimal.
  */
 
-/* The recognized activities */
-enum activity_code {
-  ACTIVITY_WALKING,
-  ACTIVITY_WALKING_UPSTAIRS,
-  ACTIVITY_WALKING_DOWNSTAIRS,
-  ACTIVITY_SITTING,
-  ACTIVITY_STANDING,
-  ACTIVITY_LAYING,
-};
-
 /* Over-the-air data */
 struct application_data {
   uint32_t timestamp;
@@ -130,6 +120,14 @@ get_activity(struct application_data *appdata)
   float features[RF_NUM_FEATURES];
   compute_features(&sensor_data, features);
 
+  /* 
+  int i;
+  printf("features: \n");
+  for (i = 0; i < RF_NUM_FEATURES; ++i) {
+    printf("  %u: %d\n", i, (int)features[i]);
+  }
+  */
+
   /* run the classifier and get the prediction */
   appdata->activity = rf_classify_single(features);
 
@@ -168,6 +166,7 @@ PROCESS_THREAD(node_process, ev, data)
         /* read the sample */
         sample_sensor();
         if(get_activity(&appdata)) {
+          LOG_INFO("activity=%u\n", appdata.activity);
           if(NETSTACK_ROUTING.node_is_reachable()
               && NETSTACK_ROUTING.get_root_ipaddr(&dst)) {
             /* Send network uptime timestamp to the network root node */

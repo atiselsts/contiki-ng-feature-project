@@ -19,6 +19,7 @@ CONTIKI_CPU_SOURCEFILES += temp-arch.c
 CONTIKI_CPU_SOURCEFILES += linkaddr-arch.c
 CONTIKI_CPU_SOURCEFILES += reset-arch.c
 CONTIKI_CPU_SOURCEFILES += slip-arch.c
+CONTIKI_CPU_SOURCEFILES += spi-arch.c
 
 # Overrides
 CONTIKI_CPU_SOURCEFILES += random.c

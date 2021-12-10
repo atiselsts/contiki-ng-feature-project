@@ -78,6 +78,13 @@
 #define ICM_SCLK_PIN 6
 #define ICM_MOSI_PIN 4
 #define ICM_MISO_PIN 14
+
+#define ICM_SPI_CONTROLLER  2
+/*---------------------------------------------------------------------------*/
+/* Enable SPI */
+#define NRFX_SPIM0_ENABLED 1
+#define NRFX_SPIM1_ENABLED 1
+#define NRFX_SPIM2_ENABLED 1
 /*---------------------------------------------------------------------------*/
 #endif /* NRF53_PDK_CONF_H */
 /*---------------------------------------------------------------------------*/
