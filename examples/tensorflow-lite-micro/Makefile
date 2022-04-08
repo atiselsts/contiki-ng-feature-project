@@ -1,5 +1,5 @@
 # Change this to your Tensorflow Lite Micro directory:
-TFLM=/home/atis/source/tflite-micro
+TFLM?=/home/atis/source/tflite-micro
 
 CONTIKI_PROJECT = main
 all: $(CONTIKI_PROJECT)
